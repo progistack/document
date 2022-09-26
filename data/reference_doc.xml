@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Reference document -->
+        <record id="ref_document" model="ir.sequence">
+            <field name="name">Numéro De Référence Document</field>
+            <field name="code">document.reference</field>
+            <field name="prefix">ENT-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="inherited_account_analytic_account_form" model="ir.ui.view">
+        <field name="name">inherited.account.analytic.account.form</field>
+        <field name="model">account.analytic.account</field>
+        <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet//div[@name='button_box']//button" position="before">
+                <button name="action_return_document"
+                        class="oe_stat_button"
+                        icon="fa-envelope"
+                        type="object"
+                        help="Vue liste des sortants"
+                >
+                    <div class="o_form_field o_stat_info">
+                        <field string="Courrier(s)" name="response_count" widget="statinfo"/>
+                    </div>
+                </button>
+                <field name="response_ids" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="options">{'no_create': 1, 'no_open': 1}</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+     <record id="inherited_partner_form" model="ir.ui.view">
+        <field name="name">inherited.res.partner.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet//div[@name='button_box']" position="inside">
+                <button name="action_return_document"
+                        class="oe_stat_button"
+                        icon="fa-envelope"
+                        type="object"
+                        help="Vue liste des sortants"
+                >
+                    <div class="o_form_field o_stat_info">
+                        <field string="Courrier(s)" name="response_count" widget="statinfo"/>
+                    </div>
+                </button>
+                <field name="response_ids" invisible="1"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

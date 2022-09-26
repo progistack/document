@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- action imprimer réponses  -->
+<!--    <record id="print_response" model="ir.actions.report">-->
+<!--        <field name="name">Imprimer sortant</field>-->
+<!--        <field name="model">document.response</field>-->
+<!--        <field name="report_type">qweb-pdf</field>-->
+<!--        <field name="report_name">document.response_template</field>-->
+<!--        <field name="report_file">document.response_template</field>-->
+<!--        <field name="print_report_name">'Courrier - %s' % (object.reference)</field>-->
+<!--        <field name="binding_model_id" ref="model_document_response"/>-->
+<!--        <field name="binding_type">report</field>-->
+<!--    </record>-->
+
+    <!-- template réponses  -->
+    <template id="response_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+<!--                <p><t t-esc="o.email"/></p>-->
+<!--                <p>Objet : <t t-esc="o.subject"/></p>-->
+                    <p><t t-raw="o.body"/></p>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

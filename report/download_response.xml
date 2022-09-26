@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="download_reponse" model="ir.actions.report">
+        <field name="name">Imprimer le courrier</field>
+        <field name="model">document.response</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">document.download_reponse_template</field>
+        <field name="report_file">/download/pdf/</field>
+        <field name="print_report_name">'Courrier sortant - %s' % (object.reference)</field>
+        <field name="binding_model_id" ref="model_document_response"/>
+        <field name="binding_type">report</field>
+    </record>
+    <template id="download_reponse_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <div class="row mt16 o_portal_invoice_sidebar">
+                <div id="page_content" class="col-12 col-lg">
+                    <div class="o_portal_html_view shadow p-3" >
+                        <t t-call="web.external_layout">
+                            <div style="margin-top: -45px;margin-left: 1.8cm;margin-right: 1.7cm;margin-bottom: 2cm;font-size: 18px;font-family: 'Times New Roman'">
+                            <div class="oe_structure"/>
+                            <t t-if="o.company_id">
+                                <div style="">
+                                    <t t-esc="o.company_id.name" /><br/>
+                                    <t t-if="o.company_id.partner_id.street and o.company_id.partner_id.street2" >
+                                        <t t-esc="o.company_id.partner_id.street" /> -
+                                        <t t-esc="o.company_id.partner_id.street2" /><br />
+                                    </t>
+                                    <t t-elif="o.company_id.partner_id.street" >
+                                        <t t-esc="o.company_id.partner_id.street" /><br/>
+                                    </t>
+                                    <t t-elif="o.company_id.partner_id.street2" >
+                                        <t t-esc="o.company_id.partner_id.street2" /><br/>
+                                    </t>
+                                    <t t-esc="o.company_id.partner_id.city" />
+                                    <t t-if="o.company_id.partner_id.zip and o.company_id.partner_id.city" >-</t>
+                                    <t t-esc="o.company_id.partner_id.zip" />
+                                </div>
+                            </t>
+                            <t t-if="o.partner_id">
+                                <div style="text-align: right;">
+                                    <t t-esc="o.partner_id.name" /><br />
+                                    <t t-if="o.partner_id.street2 and o.partner_id.street2" >
+                                        <t t-esc="o.partner_id.street" /> -
+                                        <t t-esc="o.partner_id.street2" />
+                                    </t>
+                                    <t t-elif="o.partner_id.street" ><t t-esc="o.partner_id.street" /><br/></t>
+                                    <t t-elif="o.partner_id.street2" ><t t-esc="o.partner_id.street2" /><br/></t>
+                                    <t t-esc="o.partner_id.city" /><t t-if="o.partner_id.zip and o.partner_id.city" >-</t> <t t-esc="o.partner_id.zip" />
+                                </div>
+                            </t>
+                            <p><span>Objet : </span><t t-esc="o.subject" /></p>
+                            <t t-esc="o.body" />
+                            </div>
+                        </t>
+                    </div>
+                </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

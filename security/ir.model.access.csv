@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_document_document,document.document,model_document_document,,1,1,1,1
+access_document_response,document.response,model_document_response,,1,1,1,1
+access_document_type,document.type,model_document_type,,1,1,1,1
+access_document_services,document.services,model_document_services,,1,1,1,1
+access_document_historical,document.historical,model_document_historical,,1,1,1,1
+access_response_historical,response.historical,model_response_historical,,1,1,1,1

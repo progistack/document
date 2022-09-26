@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- vue kanban -->
+    <record model="ir.ui.view" id="view_document_kanban">
+        <field name="name">Couriers kanban</field>
+        <field name="model">document.document</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="type_id"/>
+                <field name="partner_id"/>
+                <field name="state"/>
+                <field name="priority"/>
+                <field name="create_date"/>
+                <field name="department_ids"/>
+                <field name="activity_ids"/>
+                <field name="id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
+                            <div class="o_kanban_image d-none d-md-block">
+                                <img src="document/static/src/img/dossier_1.png"
+                                     style="height: auto; width:auto;"
+                                     alt="Logo"
+                                />
+                            </div>
+                            <div class="oe_kanban_details">
+                                <strong style="text-transform: uppercase;">
+                                    <field name="reference"/>
+                                </strong>
+                                <ul>
+                                    <li>
+                                        <b>Type :</b>
+                                        <t t-if="record.type_id.raw_value">
+                                            <field name="type_id"/>
+                                        </t>
+                                        <t t-else="">
+                                            <field name="reference"/>
+                                        </t>
+                                    </li>
+                                    <li>
+                                        <b>Contact :</b>
+                                        <field name="partner_id"/>
+                                    </li>
+                                </ul>
+
+                                <div class="text-right">
+                                    <field name="state" widget="badge"
+                                           decoration-muted="state == '0_in_progress'"
+                                           decoration-success="state == '1_done'"
+                                           decoration-info="state == '2_send'"
+                                           decoration-danger="state == '3_cancel'"
+                                           optional="show"
+                                    />
+                                </div>
+                                <div class="o_kanban_record_bottom flex-wrap">
+                                    <time class="oe_kanban_bottom_left">
+                                        <field name="create_date" widget="date"/>
+                                    </time>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="activity_ids" widget="kanban_activity"/>
+                                        <field name="priority" widget="priority" class="mr-3" readonly="1"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- vue liste -->
+    <record model="ir.ui.view" id="view_document_list">
+        <field name="name">Document List</field>
+        <field name="model">document.document</field>
+        <field name="arch" type="xml">
+            <tree sample="1">
+                <field name="priority" widget="priority" class="mr-3" optional="show"/>
+                <field name="type_id"/>
+                <field name="partner_id" optional="show"/>
+                <field name="create_date" string="Créer le" widget="date" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-muted="state == '0_in_progress'"
+                       decoration-success="state == '1_done'"
+                       decoration-info="state == '2_send'"
+                       decoration-danger="state == '3_cancel'"
+                       optional="show"
+                />
+            </tree>
+        </field>
+    </record>
+
+    <!--Vue formulaire -->
+    <record model="ir.ui.view" id="view_document_form">
+        <field name="name">Courrier Form</field>
+        <field name="model">document.document</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_done" string="Réceptionner" class="oe_highlight"
+                            type="object" states="0_in_progress"/>
+                    <button name="action_create_response" string="Faire une réponse"
+                            class="oe_highlight"
+                            type="object"
+                            attrs="{'invisible': ['|', ('response_count', '!=', 0), ('state', '!=', '1_done')]}"
+                    />
+                    <button name="action_create_response" string="Faire une réponse"
+                            class="oe_highlight"
+                            type="object"
+                            attrs="{'invisible': ['|', ('response_count', '=', 0), ('state', '!=', '1_done')]}"
+                            confirm="Un courrier sortant à deja été créé. Voulez-vous en créer une autre?"
+                    />
+                    <!--                    <button name="action_send_courier" string="Courrier traité"-->
+                    <!--                            class="oe_highlight"-->
+                    <!--                            type="object"-->
+                    <!--                            attrs="{'invisible': ['|', ('response_count', '!=', 0), ('state', '!=', '1_done')]}"-->
+                    <!--                    />-->
+                    <!--                    <button name="action_cancel" string="Refuser" type="object"-->
+                    <!--                            states="0_in_progress"/>-->
+                    <button name="action_in_progress" string="Mettre en brouillon"
+                            type="object" states="3_cancel"/>
+
+                    <field name="state" widget="statusbar" nolabel="1"
+                           statusbar_visible="0_in_progress,1_done"/>
+                    <!--                    <button name="action_return_document_historical"-->
+                    <!--                            type="object"-->
+                    <!--                            class="oe_highlight"-->
+                    <!--                            string="Historique des modifications" />-->
+                </header>
+
+                <sheet>
+                    <widget name="web_ribbon" title="Archivé" bg_color="bg-danger"
+                            attrs="{'invisible': [('active', '=', True)]}"
+                    />
+                    <widget name="web_ribbon" title="Traité" bg_color="bg-info"
+                            attrs="{'invisible': [('send_mail', '=', False)]}"
+                    />
+                    <div class="oe_button_box" name="button_box" attrs="{'invisible': [('response_count', '=', 0)]}">
+                        <button name="action_return_responses"
+                                class="oe_stat_button"
+                                icon="fa-envelope"
+                                type="object"
+                                help="Vue liste des sortants"
+                        >
+                            <div class="o_form_field o_stat_info">
+                                <field string="Sortant(s)" name="response_count" widget="statinfo"/>
+                            </div>
+                        </button>
+                    </div>
+                    <field name="active" invisible="1"/>
+                    <field name="send_mail" invisible="1"/>
+                    <field name="create_date" invisible="1"/>
+                    <!--                    <field name="attachment_name" invisible="1"/>-->
+                    <field name="response_ids" invisible="1"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="priority" widget="priority" class="mr-3"
+                                   attrs="{'readonly': [('state', '=', '2_send')]}"/>
+                        </h1>
+
+                        <div style="display:flex">
+                            <div style="width:250px; font-size:20px; font-weight: bold;">
+                                <span>COURRIER ENTRANT</span>
+                            </div>
+                            <div style="width:200px; font-size:20px; font-weight: bold;">
+                                <field name="reference" readonly="1"/>
+                            </div>
+
+                        </div>
+
+
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_of_issue" attrs="{'readonly': [('state', '=', '2_send')]}"  widget="date" options="{'format': 'dd/MM/yyyy'}"/>
+                        </group>
+                        <group>
+                            <field name="date_of_reception" attrs="{'readonly': [('state', '=', '2_send')]}"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="partner_id"
+                                   widget="res_partner_many2one"
+                                   context="{'show_address': 1}"
+                                   options="{'no_create_edit':True,'no_open': True,'no_create':true, 'always_reload': 1}"
+                                   attrs="{'readonly': [('state', '=', '2_send')]}"
+                            />
+                            <field name="company_id"
+                                   options="{'no_quick_create':True,'no_create_edit':True,'no_open': True}"
+                                   attrs="{'readonly': [('state', '=', '2_send')]}" invisible="1"
+                            />
+                            <field name="company_id_selection" attrs="{'readonly': [('state', '=', '2_send')]}"/>
+
+                            <!--                            <field name="service_id" widget="many2many_tags"-->
+                            <!--                                   options="{'no_create': True, 'no_open': True}"-->
+                            <!--                                   attrs="{'readonly': [('state', '=', '2_send')]}"-->
+                            <!--                            />-->
+                        </group>
+                        <group>
+                            <field name="department_ids"
+                                   widget="many2many_tags"
+                                   options="{'no_create':True}"
+                                   attrs="{'readonly': [('state', '=', '2_send')]}"
+                            />
+                            <field name="project_id"
+                                   options="{'no_create': 1, 'no_open': 1}"
+                                   attrs="{'readonly': [('state', '=', '2_send')]}"
+                            />
+                        </group>
+                    </group>
+
+                    <group>
+                        <group>
+                            <field name="save" invisible="1"/>
+                            <field name="attachment_ids" widget="many2many_binary"
+                                   attrs="{'readonly': [('state', '=', '2_send')], 'invisible': [('save', '=', False)]}"/>
+                        </group>
+                        <group>
+                            <field name="type_id"
+                                   options="{'no_quick_create':True,'no_create_edit':True}"
+                                   attrs="{'readonly': [('state', '=', '2_send')]}"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" class="oe-bordered-editor" options="{'style-inline': true}"
+                               attrs="{'readonly': [('state', '=', '2_send')]}"/>
+                    </group>
+                </sheet>
+
+                <!-- ajout de chat -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" groups="base.group_user"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- vue recherche, filtre, groupe -->
+    <record model="ir.ui.view" id="view_document_search">
+        <field name="name">Document Search</field>
+        <field name="model">document.document</field>
+        <field name="arch" type="xml">
+            <search>
+                <filter name="create_date" string="Créé aujoud'hui"
+                        domain="[('create_date', '>=', context_today().strftime('%Y-%m-%d'))]"/>
+
+                <field name="type_id" string="Info document"
+                       filter_domain="['|', '|', ('type_id', 'ilike', self), ('description', 'ilike', self), ('reference', 'ilike', self)]"/>
+                <filter name="filter_archive" string="Archivé" domain="[('active', '=', False)]"/>
+                <filter name="filter_in_progress_done" string="En brouillon ou Réceptionné"
+                        domain="[('state', 'in', ['0_in_progress', '1_done'])]"/>
+                <group expand="1" string="Grouper par ...">
+                    <filter name="group_1" string="Date de création" domain="[]" context="{'group_by':'create_date'}"/>
+                    <filter name="group_2" string="Etat" domain="[]" context="{'group_by':'state'}"/>
+                    <filter name="group_3" string="Société" domain="[]" context="{'group_by':'company_id'}"/>
+                    <filter name="group_4" string="Projet" domain="[]" context="{'group_by':'project_id'}"/>
+                    <filter name="group_5" string="Contact" domain="[]" context="{'group_by':'partner_id'}"/>
+                </group>
+                <searchpanel>
+                    <field name="state" string="Etat" icon="fa-bar-chart" color="#4BAF57" select="multi"
+                           enable_counters="1"/>
+                    <field name="priority" string="Priorité" icon="fa-star" color="#FCBC0C" select="multi"
+                           enable_counters="1"/>
+                    <field name="project_id" string="Projet" icon="fa-folder" color="#E83E3C" select="multi"
+                           enable_counters="1"/>
+                    <field name="company_id" string="Société" icon="fa-building-o" color="#2C74BA" select="multi"
+                           enable_counters="1"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <!-- action pour executer les vues -->
+    <record id="action_document" model="ir.actions.act_window">
+        <field name="name">Entrants</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">document.document</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'search_default_filter_in_progress_done': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer votre premier courrier !
+            </p>
+        </field>
+    </record>
+
+    <record model="ir.actions.server" id="document_action_server">
+        <field name="name">Entrants</field>
+        <field name="model_id" ref="model_document_document"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = model._document_action_server()
+        </field>
+    </record>
+    <menuitem id="menu_document_master"
+              name="Entrants"
+              parent="menu_document_root"
+              action="document_action_server"
+              sequence="0"
+    />
+</odoo>

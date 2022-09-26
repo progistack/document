@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="preview_response">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <t t-call="portal.portal_layout">
+
+
+            <div class="row mt16 o_portal_invoice_sidebar" >
+                 <!-- Sidebar -->
+
+                <!-- Page Content -->
+                <div id="page_content" class="col-12 col-lg" style="background-color: white;">
+                    <div class="o_portal_html_view shadow p-3">
+                        <t t-call="web.external_layout">
+                            <div class="oe_structure"/>
+                            <div style="margin-left: 2.54cm;margin-right: 2.54cm;margin-bottom: 2.54cm;font-size: 22px;font-family: 'Times New Roman'">
+                            <t t-if="response_id.company_id">
+                                <t t-esc="response_id.company_id.name" /><br/>
+                                <t t-if="response_id.company_id.partner_id.street and response_id.company_id.partner_id.street2" >
+                                    <t t-esc="response_id.company_id.partner_id.street" /> -
+                                    <t t-esc="response_id.company_id.partner_id.street2" /><br />
+                                </t>
+                                <t t-elif="response_id.company_id.partner_id.street" >
+                                    <t t-esc="response_id.company_id.partner_id.street" /><br/>
+                                </t>
+                                <t t-elif="response_id.company_id.partner_id.street2" >
+                                    <t t-esc="response_id.company_id.partner_id.street2" /><br/>
+                                </t>
+                                <t t-esc="response_id.company_id.partner_id.city" />
+                                <t t-if="response_id.company_id.partner_id.zip and response_id.company_id.partner_id.city" >-</t>
+                                <t t-esc="response_id.company_id.partner_id.zip" />
+                            </t>
+                            <t t-if="response_id.partner_id">
+                                <div style="text-align: right;">
+                                    <t t-esc="response_id.partner_id.name" /><br />
+                                    <t t-if="response_id.partner_id.street2 and response_id.partner_id.street2" >
+                                        <t t-esc="response_id.partner_id.street" /> -
+                                        <t t-esc="response_id.partner_id.street2" />
+                                    </t>
+                                    <t t-elif="response_id.partner_id.street" ><t t-esc="response_id.partner_id.street" /><br/></t>
+                                    <t t-elif="response_id.partner_id.street2" ><t t-esc="response_id.partner_id.street2" /><br/></t>
+                                    <t t-esc="response_id.partner_id.city" /><t t-if="response_id.partner_id.zip and response_id.partner_id.city" >-</t> <t t-esc="response_id.partner_id.zip" />
+                                </div>
+                            </t>
+                            <p><span>Objet : </span><t t-esc="response_id.subject" /></p>
+                            <t t-esc="response_id.body" />
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+             </div>
+         </t>
+         </xpath>
+    </template>
+
+    <template id="portal_breadcrumbs_inherit" name="Portal Breadcrumbs" inherit_id="portal.portal_breadcrumbs">
+
+        <xpath expr="." position="attributes">
+            <attribute name="invisible">1</attribute>
+        </xpath>
+        <xpath expr="//li[hasclass('breadcrumb-item')]" position="replace">
+            <div ><span class="mb-0">Aperçu du courrier sortant <t t-esc="response_id.reference" /></span> </div>
+        </xpath>
+    </template>
+
+    <template id="frontend_layout_inherit" name="Main Frontend Layout" inherit_id="portal.frontend_layout">
+        <xpath expr="//nav" position="replace">
+
+        </xpath>
+    </template>
+</odoo>

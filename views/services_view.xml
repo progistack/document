@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="service_view_tree" model="ir.ui.view">
+        <field name="name">Services</field>
+        <field name="model">document.services</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="service" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="services_action" model="ir.actions.act_window">
+        <field name="name">Services</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">document.services</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+<!--    <menuitem id="menu_services"-->
+<!--              name="Services"-->
+<!--              parent="document.menu_config_master"-->
+<!--              action="services_action"-->
+<!--              sequence="5"-->
+<!--    />-->
+</odoo>
