@@ -7,3 +7,4 @@ from . import document_type
 from . import historical
 from . import mail_activity_inherit
 from . import res_company
+from . import employee_sudo

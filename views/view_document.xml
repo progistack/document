@@ -204,6 +204,8 @@
                                    options="{'no_create':True}"
                                    attrs="{'readonly': [('state', '=', '2_send')]}"
                             />
+                            <field name="concerned_employees" widget="many2many_tags" options="{'no_create':True}"
+                                   attrs="{'readonly': [('state', '=', '2_send')]}" />
                             <field name="project_id"
                                    options="{'no_create': 1, 'no_open': 1}"
                                    attrs="{'readonly': [('state', '=', '2_send')]}"

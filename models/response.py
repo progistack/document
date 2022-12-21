@@ -119,6 +119,7 @@ class Response(models.Model):
     abr_company = fields.Char(string="abreviation et date", default=write_ref)
     new_ref = fields.Char(readonly=True)
     person_send = fields.Char(string="expediteur du courrier", default=person_name)
+    save = fields.Boolean(default=0)
 
 
 
@@ -283,6 +284,7 @@ class Response(models.Model):
 
         if vals.get('reference', _('New')) == _('New'):
             vals['reference'] = self.env['ir.sequence'].next_by_code('response.reference') or _('New')
+        vals['save'] = 1
         res = super(Response, self).create(vals)
         return res
 
@@ -317,6 +319,11 @@ class Response(models.Model):
                                         " Veuillez contacter l'administrateur")
             if vals.get('body'):
                 s.message_post(body="Corps du sortant modifié")
+            if vals.get('attachment_ids'):
+                if len(vals.get('attachment_ids')[0][2]) < len(s.attachment_ids):
+                    s.message_post(body="Pièce jointe retirée.")
+                elif len(vals.get('attachment_ids')[0][2]) > len(s.attachment_ids):
+                    s.message_post(body="Pièce jointe ajoutée.")
             if vals.get('department_ids'):
                 print("DepAR", vals.get('department_ids'))
                 department_ids = self.env['hr.department'].search([('id', 'in', vals.get('department_ids')[0][2])])
@@ -372,3 +379,9 @@ class Response(models.Model):
         print("Changing self.company_id")
         self.company_id = self.env['res.company'].sudo().search([('id', '=', int(self.company_id_selection))])
         print("Changing2", self.company_id)
+
+    def initialise_response(self):
+
+        responses = self.env['document.response'].search([])
+        for response in responses:
+            response.save = 1

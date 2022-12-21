@@ -44,6 +44,7 @@ def add_document_type(env):
             'name': 'Autre'
         })
 
+
 def _initialise_document_services(cr, registry):
     env = api.Environment(cr, SUPERUSER_ID, {})
     if not env['document.services'].search([]):

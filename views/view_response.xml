@@ -164,6 +164,7 @@
                     <button class="btn btn-outline-primary" name="preview_response" type="object" string="Prévisualiser"
                             data-hotkey="o"
                             title="Preview invoice"/>
+                    <button name="initialise_response" type="object" string="Initialiser reponses" />
                     <field name="state" widget="statusbar" nolabel="1"
                            statusbar_visible="0_draft,0_to_validate,1_done,2_send,5_unload"/>
                 </header>
@@ -192,7 +193,7 @@
 
                     <div class="oe_title" style="display: flex; width:500px;">
                         <div>
-                            <span style="font-size:25; font-weight:bold;">SORTANT :</span>
+                            <span style="font-size:25; font-weight:bold;">SORTANT </span>
                         </div>
 
                         <div>
@@ -250,8 +251,9 @@
 
 
                     <group>
+                        <field name="save" invisible="1" />
                         <field name="attachment_ids" widget="many2many_binary"
-                               attrs="{'invisible': [('state', 'not in', ['1_done','2_send','5_unload'])]}"/>
+                               attrs="{'invisible': [('save', '=', False)]}"/>
                     </group>
                     <!--                    <label for="body" string="Corps du message à envoyer"></label>-->
                     <group>

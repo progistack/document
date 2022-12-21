@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api, _
+from odoo import models, fields, api, _, Command
 from odoo.exceptions import ValidationError, UserError
+
 
 # class HrEmployeePublic(models.Model):
 #     _name = "hr.employee"
@@ -44,6 +45,32 @@ class Document(models.Model):
         type_id = self.env['document.type'].search([('name', '=', 'Autre')])
         return type_id.id
 
+    def _domain_employee_sudo(self):
+        print("_domain_employee_sudo exec", self)
+
+        employees = self.env['hr.employee'].sudo().search([])
+        employee_sudo = self.env['hr.employee.sudo'].search([])
+
+        emp_ids = [emp.id for emp in employees]
+        emps_ids = [emps.employee_id for emps in employee_sudo]
+
+        if len(emp_ids) != len(emps_ids):
+            for emp_id in emp_ids:
+                if not emp_id in emps_ids:
+                    try:
+                        employee = self.env['hr.employee'].sudo().browse(emp_id)
+                        rec = employee_sudo.create({
+                                'employee_id': emp_id,
+                                'employee_name': employee.name,
+                                'employee_email': employee.work_email,
+                            })
+                        print("Employee créé", rec.employee_name)
+                    except:
+                        raise ValidationError("Un problème est survenu lors de la récupération des employés. Veuillez contacter l'administrateur si le problème persiste.")
+
+        return []
+
+
     attachment_ids = fields.Many2many(
         comodel_name='ir.attachment',
         string='Charger vos fichiers')
@@ -51,7 +78,8 @@ class Document(models.Model):
     type_id = fields.Many2one('document.type', 'Type de courrier', default=_get_default_document_type)
     description = fields.Html('Note', readonly=False)
     company_id = fields.Many2one('res.company', 'Société destinataire', tracking=True)
-    company_id_selection = fields.Selection(_set_liste_selection, string="Société destinataire", required=True, default=_get_default_company_id_selection)
+    company_id_selection = fields.Selection(_set_liste_selection, string="Société destinataire", required=True,
+                                            default=_get_default_company_id_selection)
     project_id = fields.Many2one('account.analytic.account', string="Projet", default=_get_default_project)
     partner_id = fields.Many2one('res.partner', string="Émetteur", tracking=True, required=True)
     department_ids = fields.Many2many('hr.department', string="Départements", tracking=True, required=True)
@@ -80,6 +108,8 @@ class Document(models.Model):
     service_id = fields.Many2many('document.services')
     restored_historical = fields.Many2one('document.historical', string=(_("Restored Historical")))
     save = fields.Boolean(default=0)
+
+    concerned_employees = fields.Many2many('hr.employee.sudo', domain=_domain_employee_sudo, string="Employées concernés", tracking=True)
 
     @api.depends("response_ids")
     def _compute_response(self):
@@ -143,40 +173,73 @@ Respectueusement,
             if not rec.project_id:
                 raise ValidationError("Veuillez sélectionner un Projet s'il vous plaît !")
 
+            # Reccuperation des pieces jointes
+            new_attachments = []
+            for attachment in rec.attachment_ids:
+                new_attachments.append(attachment.id)
+            new_attachments.reverse()
+            cmd = [Command.set(new_attachments)]
+
+            try:
+
+                for emp in rec.concerned_employees:
+                    print("ma boucle", emp.employee_name)
+                    if emp.employee_email:
+                        print("Dans le if", rec.reference, rec.description, emp.employee_email, cmd)
+                        base_values = {
+                            'subject': rec.reference,
+                            'body_html': "Bonjour,"
+                                         f"{rec.description}"
+                                         "Signature",
+                            'email_to': emp.employee_email,
+                            # 'attachment_ids': cmd
+                        }
+                        print("avant mail")
+                        mail = self.env['mail.mail'].sudo().create(base_values)
+                        print("Avant envoi")
+                        mail.send()
+                        print("Mail envoyee", mail)
+                        rec.sudo().message_post(body=f"Mail envoyé à {emp.employee_name}")
+                        print("Apres tout", rec)
+                    else:
+                        raise ValidationError(f"Aucune adresse mail trouvé pour l'employé {emp.employee_name}")
+            except:
+                raise ValidationError("Un problème est survenu lors de l'envoi de mail.")
+
             # Envoi de message aux employees des departements selectionnes
-            print("LEs departements", rec.department_ids)
+            # print("LEs departements", rec.department_ids)
             for department in rec.department_ids:
-                print("Department", department.name)
                 employees = self.env['hr.employee'].sudo().search([('department_id', '=', department.id)])
-                print("Employees", employees)
-                partner_ids = [employee.user_id.partner_id.id for employee in employees if employee.user_id and employee.user_id.has_group('document.securite_utilisateur')]
-                print("Partner_ids", partner_ids)
+                partner_ids = [employee.user_id.partner_id.id for employee in employees if
+                               employee.user_id and employee.user_id.has_group('document.securite_utilisateur')]
 
                 reference = self.reference
-
-                mm = self.env['mail.message'].create({
-                    'subject': "Réception de courrier entrant",
-                    'email_from': self.env.user.partner_id.email,
-                    'author_id': self.env.user.partner_id.id,
-                    'model': 'document.document',
-                    'message_type': 'notification',
-                    'subtype_id': 2,
-                    'body': f"Un nouveau courrier réceptionné est adressé au departement {department.name} <h1>Message</h2>",
-                    'partner_ids': partner_ids,
-                    'res_id': rec.id
-                })
-                print("After mm", mm)
-                for partner_id in partner_ids:
-                    # old_messages = self.env['mail.notification'].sudo().search([
-                    #     ('res_partner_id', '=', partner_id), ('notification_type', '!=', 'inbox')]).unlink()
-                    print("Begin pt", partner_id)
-                    mn = self.env['mail.notification'].create({
-                        'mail_message_id': mm.id,
-                        'notification_type': 'inbox',
-                        'is_read': False,
-                        'res_partner_id': partner_id
+                try:
+                    mm = self.env['mail.message'].create({
+                        'subject': "Réception de courrier entrant",
+                        'email_from': self.env.user.partner_id.email,
+                        'author_id': self.env.user.partner_id.id,
+                        'model': 'document.document',
+                        'message_type': 'notification',
+                        'subtype_id': 2,
+                        'body': f"Un nouveau courrier réceptionné est adressé au departement {department.name} <h1>Message</h2>",
+                        'partner_ids': partner_ids,
+                        'res_id': rec.id
                     })
-                    print("message envoye", mm, mn)
+                    # print("After mm", mm)
+                    for partner_id in partner_ids:
+                        # old_messages = self.env['mail.notification'].sudo().search([
+                        #     ('res_partner_id', '=', partner_id), ('notification_type', '!=', 'inbox')]).unlink()
+                        # print("Begin pt", partner_id)
+                        mn = self.env['mail.notification'].create({
+                            'mail_message_id': mm.id,
+                            'notification_type': 'inbox',
+                            'is_read': False,
+                            'res_partner_id': partner_id
+                        })
+                        # print("message envoye", mm, mn)
+                except:
+                    raise ValidationError("Un problème est survenu lors de l'envoi de la notification.")
 
             rec.date_of_reception = fields.Datetime.now()
             rec.state = '1_done'
@@ -213,7 +276,7 @@ Respectueusement,
         #     vals['name'] = vals['reference']
 
         res = super(Document, self).create(vals)
-        print("dave ",res.save)
+        print("dave ", res.save)
         print("Res2", res.attachment_ids)
         res.write({'save': 1})
         print("save ", res.save)
@@ -221,28 +284,33 @@ Respectueusement,
 
     def write(self, vals):
         # for s in self:
-            # if vals.get('partner_id') or vals.get('company_id') or vals.get('description'):
-            #     historicals = self.env['document.historical'].search([('document_id', '=', s.id)])
-            #     print("historicals", historicals)
-            #     taille= len(self.env['document.historical'].search([('document_id', '=', self.id)]))
-            #     historical = self.env['document.historical'].create({
-            #         'reference':  f"{s.reference}/HIS/N.{taille+1}",
-            #         'document_id': s.id,
-            #         'partner_id': s.partner_id.id,
-            #         'company_id': s.company_id.id,
-            #         'description': s.description,
-            #     })
-            #     print("Historical et historicals", historical, historicals)
-            #     if historicals:
-            #         his = historicals[0]
-            #         print("dernier element", his)
-            #         his.write({'next_historical': historical.id})
-            #         historical.write({'previous_historical': his.id})
-            #         print("Enre de previous_historical et next_historical",his.next_historical, historical.previous_historical)
-            #     else:
-            #         print("Pas d'historique")
-                # print("Historique cree", historical)
-        print("Vals", vals)
+        # if vals.get('partner_id') or vals.get('company_id') or vals.get('description'):
+        #     historicals = self.env['document.historical'].search([('document_id', '=', s.id)])
+        #     print("historicals", historicals)
+        #     taille= len(self.env['document.historical'].search([('document_id', '=', self.id)]))
+        #     historical = self.env['document.historical'].create({
+        #         'reference':  f"{s.reference}/HIS/N.{taille+1}",
+        #         'document_id': s.id,
+        #         'partner_id': s.partner_id.id,
+        #         'company_id': s.company_id.id,
+        #         'description': s.description,
+        #     })
+        #     print("Historical et historicals", historical, historicals)
+        #     if historicals:
+        #         his = historicals[0]
+        #         print("dernier element", his)
+        #         his.write({'next_historical': historical.id})
+        #         historical.write({'previous_historical': his.id})
+        #         print("Enre de previous_historical et next_historical",his.next_historical, historical.previous_historical)
+        #     else:
+        #         print("Pas d'historique")
+        # print("Historique cree", historical)
+        # print("Vals", vals)
+        if vals.get('attachment_ids'):
+            if len(vals.get('attachment_ids')[0][2]) < len(self.attachment_ids):
+                self.message_post(body="Pièce jointe retirée.")
+            elif len(vals.get('attachment_ids')[0][2]) > len(self.attachment_ids):
+                self.message_post(body="Pièce jointe ajoutée.")
         res = super(Document, self).write(vals)
         return res
 

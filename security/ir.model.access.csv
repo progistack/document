@@ -5,3 +5,4 @@ access_document_type,document.type,model_document_type,,1,1,1,1
 access_document_services,document.services,model_document_services,,1,1,1,1
 access_document_historical,document.historical,model_document_historical,,1,1,1,1
 access_response_historical,response.historical,model_response_historical,,1,1,1,1
+access_hr_employee_sudo,hr.employee.sudo,model_hr_employee_sudo,,1,1,1,1
