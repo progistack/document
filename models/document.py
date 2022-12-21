@@ -192,7 +192,7 @@ Respectueusement,
                                          f"{rec.description}"
                                          "Signature",
                             'email_to': emp.employee_email,
-                            # 'attachment_ids': cmd
+                            'attachment_ids': cmd
                         }
                         print("avant mail")
                         mail = self.env['mail.mail'].sudo().create(base_values)
